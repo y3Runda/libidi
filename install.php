@@ -10,9 +10,10 @@ if (file_exists($config_file)) {
 require(__DIR__."/libs/phpminimumversionlib.php");
 libidi_require_minimum_php_version();
 
-$errors = array();
 $data = $_POST;
 if (!empty($data)) {
+
+    $errors = [];
 
     $host = $data['db_host'];
     $name = $data['db_name'];
@@ -21,9 +22,13 @@ if (!empty($data)) {
     $pref = $data['db_prefix'];
     
     require_once(__DIR__."/libs/installationlib.php");
-    database_connect($host, $name, $user, $pass);
+    $connection = database_connect($host, $name, $user, $pass);
+    if ($connection == null) $errors[] = 'Error during connection to the database';
     if (empty($errors)) {
         create_config_file($config_file, $host, $name, $user, $pass, $pref);
+        create_all_tables($pref, $connection);
+        $connection = database_close_connection_null();
+        header("Location: /admin/index.php");
     }
 
 }
